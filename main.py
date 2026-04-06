@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from app.api.routers import activities
+# Esta es la ruta "a prueba de balas"
+from app.api.routers.activities import router as activities_router
 
 app = FastAPI(
     title="Clan Disciplina API",
@@ -7,8 +8,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Conectamos las rutas de actividades
-app.include_router(activities.router)
+# Conectamos las rutas
+app.include_router(activities_router)
 
 @app.get("/")
 def root_health_check():

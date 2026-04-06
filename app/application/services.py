@@ -1,29 +1,30 @@
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-import os
+from app.domain.models import Rank
 
-security = HTTPBearer()
+# Definición de rangos
+RANKS = [
+    Rank(name="Iron", min_xp=0, max_xp=199),
+    Rank(name="Bronze", min_xp=200, max_xp=399),
+    Rank(name="Silver", min_xp=400, max_xp=599),
+    Rank(name="Gold", min_xp=600, max_xp=799),
+    Rank(name="Platinum", min_xp=800, max_xp=999),
+    Rank(name="Diamond", min_xp=1000, max_xp=1199),
+    Rank(name="Master", min_xp=1200, max_xp=1399),
+    Rank(name="GrandMaster", min_xp=1400, max_xp=1599),
+    Rank(name="Challenger", min_xp=1600, max_xp=None)
+]
 
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "super-secreto-para-desarrollo")
+class RankService:
+    @staticmethod
+    def calculate_rank(total_xp: int) -> str:
+        for rank in RANKS:
+            if rank.max_xp is None:
+                return rank.name
+            if rank.min_xp <= total_xp <= rank.max_xp:
+                return rank.name
+        return "Iron"
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
-    """Extrae y valida el JWT, devolviendo el ID del usuario."""
-    token = credentials.credentials
-    try:
-        # En desarrollo, si usamos un token de prueba, lo dejamos pasar
-        if token == "token-de-prueba-123":
-            return "user_test_id_001"
-            
-        payload = jwt.decode(
-            token, 
-            SUPABASE_JWT_SECRET, 
-            algorithms=["HS256"], 
-            audience="authenticated"
-        )
-        return payload["sub"] # Devuelve el user_id de Supabase
-        
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="El token ha expirado. Vuelve a iniciar sesión.")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Token inválido o corrupto.")
+class ValidationManager:
+    @staticmethod
+    def validate_evidence(photo_url: str):
+        if not photo_url or not photo_url.startswith("http"):
+            raise ValueError("Se requiere una URL de foto válida.")
